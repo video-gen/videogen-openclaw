@@ -1,0 +1,75 @@
+{
+  "id": "videogen",
+  "name": "VideoGen",
+  "description": "Generate videos and media with VideoGen. Exposes the full VideoGen API (workflows, image/video/audio generation, media editing, projects, files) as native OpenClaw tools.",
+  "version": "2.1.0",
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "apiKey": {
+        "type": "string",
+        "description": "VideoGen API key (sk_videogen_live_...). Falls back to the VIDEOGEN_API_KEY environment variable. Create one at https://app.videogen.io/api."
+      },
+      "baseUrl": {
+        "type": "string",
+        "description": "Override the VideoGen API base URL. Falls back to VIDEOGEN_BASE_URL, then https://api.videogen.io."
+      }
+    }
+  },
+  "activation": {
+    "onStartup": true
+  },
+  "contracts": {
+    "tools": [
+      "script_to_video",
+      "voiceover_to_video",
+      "slideshow_to_video",
+      "storyboard_to_video",
+      "prompt_to_video_clip",
+      "list_workflow_runs",
+      "get_workflow_run",
+      "cancel_workflow_run",
+      "generate_image",
+      "generate_video_clip",
+      "text_to_speech",
+      "generate_sound_effect",
+      "generate_music",
+      "generate_motion_graphic",
+      "generate_avatar",
+      "vectorize_image",
+      "remove_image_background",
+      "remove_video_background",
+      "upscale_image",
+      "upscale_video",
+      "image_3d_effect",
+      "list_tool_executions",
+      "get_tool_execution",
+      "cancel_tool_execution",
+      "list_projects",
+      "get_project",
+      "export_project",
+      "get_project_export",
+      "remix_project",
+      "list_project_remix_actions",
+      "upload_file",
+      "create_file_upload",
+      "get_file",
+      "list_files",
+      "list_entities",
+      "create_entity",
+      "get_entity",
+      "update_entity",
+      "archive_entity",
+      "add_entity_reference",
+      "remove_entity_reference",
+      "list_tts_voices",
+      "list_languages",
+      "get_me",
+      "get_app_deep_link",
+      "get_getting_started_guidance",
+      "get_async_tasks_guidance",
+      "get_workflows_guidance",
+      "get_tools_vs_workflows_guidance"
+    ]
+  }
+}
