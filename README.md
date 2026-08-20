@@ -66,10 +66,13 @@ This is a standalone package (its own toolchain, not part of the VideoGen monore
 
 ```bash
 npm install
+npm run build
 npm run typecheck
 npm run lint
 npm test
 ```
+
+Installed / ClawHub packages load `dist/index.js` (`openclaw.runtimeExtensions`). `npm run build` must produce that file before publish.
 
 After changing the tool set or config schema, regenerate the manifest metadata:
 
