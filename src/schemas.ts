@@ -184,7 +184,6 @@ export const voiceIdField = Type.Optional(
     description: "Catalog display name (e.g. Matilda) or text-to-speech voice id (vg_voic_...).",
   }),
 );
-);
 
 export const voiceSpeedField = Type.Optional(
   Type.Number({ minimum: 0, description: "Speech rate multiplier." }),
