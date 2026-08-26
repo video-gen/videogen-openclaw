@@ -56,19 +56,20 @@ export const aspectRatioSchema = Type.Object(
 
 export const visualStyleSchema = Type.Object(
   {
-    type: Type.Union([Type.Literal("STOCK"), Type.Literal("AI_IMAGE"), Type.Literal("ENTITY")], {
+    type: Type.Union([Type.Literal("STOCK"), Type.Literal("AI_IMAGE")], {
       description:
-        "STOCK pulls stock footage/images; AI_IMAGE generates a styled image per section; ENTITY matches a visual-style entity's reference images.",
+        "STOCK pulls stock footage/images; AI_IMAGE generates a styled image per section. Pass entityId for a saved visual-style entity, or aiStyle for a free-form look.",
     }),
     aiStyle: Type.Optional(
       Type.String({
         description:
-          "Required when type is AI_IMAGE: free-form description of the look for every image.",
+          "Required when type is AI_IMAGE and entityId is omitted: free-form description of the look for every image.",
       }),
     ),
     entityId: Type.Optional(
       Type.String({
-        description: "Required when type is ENTITY: id of a VISUAL_STYLE entity (vg_enti_...).",
+        description:
+          "When type is AI_IMAGE: id of a VISUAL_STYLE entity (vg_enti_...). When set, generated images match that entity instead of aiStyle.",
       }),
     ),
     restyleFeaturedBRollWithAiStyle: Type.Optional(
@@ -179,7 +180,10 @@ export const languageField = Type.Optional(
 );
 
 export const voiceIdField = Type.Optional(
-  Type.String({ description: "Text-to-speech voice id (vg_voic_...)." }),
+  Type.String({
+    description: "Catalog display name (e.g. Matilda) or text-to-speech voice id (vg_voic_...).",
+  }),
+);
 );
 
 export const voiceSpeedField = Type.Optional(

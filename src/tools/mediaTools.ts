@@ -134,7 +134,10 @@ export function buildMediaTools(tool: ToolFactory): DefinedTool[] {
       description: "Convert text into spoken audio using a selectable voice.",
       parameters: Type.Object({
         ttsText: Type.String({ description: "The text to speak." }),
-        voiceId: Type.String({ description: "Voice id from list_tts_voices (vg_voic_...)." }),
+        voiceId: Type.String({
+          description:
+            "Catalog display name (e.g. Matilda) or voice id from list_tts_voices (vg_voic_...).",
+        }),
         speechLanguageCode: Type.Optional(
           Type.Union([Type.String(), Type.Null()], {
             description: "BCP-47 language code for the narration.",
