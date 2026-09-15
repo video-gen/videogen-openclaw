@@ -106,7 +106,8 @@ export function buildMediaTools(tool: ToolFactory): DefinedTool[] {
         ),
         durationSeconds: Type.Optional(
           Type.Union([Type.Number({ minimum: 0 }), Type.Null()], {
-            description: "Requested clip duration in seconds.",
+            description:
+              "Optional clip length in whole seconds (1 to 30). Omit or pass null for Auto.",
           }),
         ),
         aspectRatio: Type.Optional(aspectRatioSchema),

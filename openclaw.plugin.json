@@ -2,7 +2,7 @@
   "id": "videogen",
   "name": "VideoGen",
   "description": "Generate videos and media with VideoGen. Exposes the full VideoGen API (workflows, image/video/audio generation, media editing, projects, files) as native OpenClaw tools.",
-  "version": "2.1.13",
+  "version": "2.2.0",
   "configSchema": {
     "type": "object",
     "properties": {

@@ -5,11 +5,27 @@
  * with `base/src/logic/assistant/assistantDeepLink.ts` and `mcp/src/appDeepLink.ts`.
  */
 
-type VideogenEnvironment = "LOCAL" | "DEV" | "STAGING" | "PRERELEASE" | "PROD";
+type VideogenEnvironment = "LOCAL" | "DEV" | "PRERELEASE" | "PROD";
+
+const getHostnameFromApiBaseUrl = (apiBaseUrl: string): string | null => {
+  try {
+    return new URL(apiBaseUrl).hostname.toLowerCase();
+  } catch {
+    try {
+      return new URL(`https://${apiBaseUrl}`).hostname.toLowerCase();
+    } catch {
+      return null;
+    }
+  }
+};
 
 /**
  * Prefer `VIDEOGEN_ENV` when set; otherwise infer from the API `baseUrl` the
  * plugin is pointed at (same host mapping MCP uses for app deep links).
+ *
+ * Match the hostname, not a substring of the URL. Hosts like
+ * `dev.api.videogen.io` contain `api.videogen.io`, so a substring check would
+ * classify them as PROD.
  */
 const getVideogenEnvironment = ({
   apiBaseUrl,
@@ -17,24 +33,30 @@ const getVideogenEnvironment = ({
   apiBaseUrl: string | undefined;
 }): VideogenEnvironment => {
   const rawEnv = process.env.VIDEOGEN_ENV;
-  if (rawEnv === "LOCAL" || rawEnv === "DEV" || rawEnv === "STAGING" || rawEnv === "PRERELEASE" || rawEnv === "PROD") {
+  if (rawEnv === "LOCAL" || rawEnv === "DEV" || rawEnv === "PRERELEASE" || rawEnv === "PROD") {
     return rawEnv;
   }
 
-  const normalized = (apiBaseUrl ?? "").toLowerCase();
-  if (normalized.includes("localhost") || normalized.includes("127.0.0.1")) {
+  const trimmed = (apiBaseUrl ?? "").trim();
+  if (trimmed.length === 0) {
+    return "PROD";
+  }
+
+  const hostname = getHostnameFromApiBaseUrl(trimmed);
+  if (hostname == null) {
     return "LOCAL";
   }
-  if (normalized.includes("prerelease")) {
+
+  if (hostname === "localhost" || hostname === "127.0.0.1") {
+    return "LOCAL";
+  }
+  if (hostname === "prerelease.api.videogen.io") {
     return "PRERELEASE";
   }
-  if (normalized.includes("staging")) {
-    return "STAGING";
-  }
-  if (normalized.includes("dev.api") || normalized.includes("api-dev") || normalized.includes("//dev.")) {
+  if (hostname === "dev.api.videogen.io") {
     return "DEV";
   }
-  if (normalized.includes("api.videogen.io") || normalized.length === 0) {
+  if (hostname === "api.videogen.io") {
     return "PROD";
   }
 
@@ -49,6 +71,49 @@ const CAPABILITY_PARAM = "vg_capability";
 const LOCALE_PARAM = "vg_locale";
 
 const MAX_FEEDBACK_TEXT_LENGTH = 500;
+
+// Kept local because the published OpenClaw plugin cannot depend on internal workspace packages.
+// Must stay identical to `APP_LOCALES` in `static/src/app/locales.ts`.
+const ACTIVE_APP_DEEP_LINK_LOCALES = [
+  "cs",
+  "de",
+  "el",
+  "en",
+  "es",
+  "fr",
+  "hr",
+  "hu",
+  "id",
+  "it",
+  "ja",
+  "ko",
+  "pl",
+  "pt",
+  "ro",
+  "th",
+  "tr",
+  "uk",
+  "vi",
+  "zh",
+] as const;
+
+const ACTIVE_APP_DEEP_LINK_LOCALE_SET = new Set<string>(ACTIVE_APP_DEEP_LINK_LOCALES);
+
+const getSupportedSuggestedLocaleOrNull = ({
+  suggestedLocale,
+}: {
+  suggestedLocale: string | null | undefined;
+}): string | null => {
+  if (suggestedLocale == null || suggestedLocale.length === 0) {
+    return null;
+  }
+
+  if (!ACTIVE_APP_DEEP_LINK_LOCALE_SET.has(suggestedLocale)) {
+    return null;
+  }
+
+  return suggestedLocale;
+};
 
 const RATE_CARD_URL = "https://videogen.io/rate-card";
 const HELP_DOCS_BASE_URL = "https://help.videogen.io";
@@ -100,8 +165,6 @@ const getAppBaseUrl = (environment: VideogenEnvironment): string => {
       return "https://prerelease.app.videogen.io";
     case "DEV":
       return "https://dev.app.videogen.io";
-    case "STAGING":
-      return "https://staging.app.videogen.io";
     case "LOCAL":
       return "http://localhost:3000";
   }
@@ -222,8 +285,11 @@ export function buildAppDeepLinkUrl(
     case "OPEN_LANGUAGE_SELECTOR": {
       const searchParams = new URLSearchParams();
       searchParams.set(ACTION_PARAM, action.type);
-      if (action.suggestedLocale != null && action.suggestedLocale.length > 0) {
-        searchParams.set(LOCALE_PARAM, action.suggestedLocale);
+      const suggestedLocale = getSupportedSuggestedLocaleOrNull({
+        suggestedLocale: action.suggestedLocale,
+      });
+      if (suggestedLocale != null && suggestedLocale.length > 0) {
+        searchParams.set(LOCALE_PARAM, suggestedLocale);
       }
       return appendSearchParams({
         baseUrl: joinAppUrl({ baseUrl: appBase, path: "/settings/account" }),
@@ -291,9 +357,13 @@ export function appDeepLinkActionFromToolArgs(args: {
       };
     }
     case "OPEN_LANGUAGE_SELECTOR": {
+      const suggestedLocale = getSupportedSuggestedLocaleOrNull({
+        suggestedLocale: args.suggestedLocale,
+      });
+
       return {
         type: "OPEN_LANGUAGE_SELECTOR",
-        suggestedLocale: args.suggestedLocale ?? null,
+        suggestedLocale,
       };
     }
     case "NAVIGATE": {
