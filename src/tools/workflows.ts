@@ -238,6 +238,86 @@ export function buildWorkflowTools(tool: ToolFactory): DefinedTool[] {
     }),
 
     tool({
+      name: "video_to_video",
+      label: "Video to video",
+      description:
+        "Restyle an existing video from a text prompt inside an editable project, keeping its length and timing. Pass exactly one of videoFileId (an uploaded video) or videoUrl (a public link, which the run imports itself). Up to 120 seconds is restyled per run. Starts the workflow and, by default, waits for the finished render. Provide at least two remixActions (e.g. ENABLE_CAPTIONS + ADD_TRANSITIONS) for a polished result.",
+      parameters: Type.Object({
+        videoFileId: Type.Optional(
+          Type.String({
+            description: "Uploaded video file id (vg_file_...). Provide this or videoUrl.",
+          }),
+        ),
+        videoUrl: Type.Optional(
+          Type.String({
+            maxLength: 2048,
+            description:
+              "Public http(s) link to a video page or video file. The run imports it; do not import it first. Provide this or videoFileId.",
+          }),
+        ),
+        prompt: Type.String({
+          minLength: 1,
+          description:
+            "How the restyled video should look (e.g. 'Hand-made claymation with soft studio lighting').",
+        }),
+        trimStartSeconds: Type.Optional(
+          Type.Number({
+            minimum: 0,
+            description: "Second where the restyled part starts. Defaults to 0.",
+          }),
+        ),
+        trimEndSeconds: Type.Optional(
+          Type.Number({
+            minimum: 0,
+            description:
+              "Second where the restyled part ends. Defaults to trimStartSeconds + 120, capped at the end of the video. The part must be 2-120 seconds long.",
+          }),
+        ),
+        imageFileIds: Type.Optional(
+          Type.Array(Type.String(), {
+            maxItems: 10,
+            description: "Uploaded reference image file ids that guide the look.",
+          }),
+        ),
+        aspectRatio: Type.Optional(aspectRatioSchema),
+        quality: Type.Optional(
+          Type.Union(
+            [
+              Type.Literal("LOW"),
+              Type.Literal("STANDARD"),
+              Type.Literal("HIGH"),
+              Type.Literal("MAX"),
+            ],
+            {
+              description:
+                "Restyle quality (LOW, STANDARD, HIGH, or MAX). Higher tiers cost more and follow the source more faithfully. Defaults to HIGH.",
+            },
+          ),
+        ),
+        audio: Type.Optional(
+          Type.Union([Type.Literal("KEEP_ORIGINAL"), Type.Literal("GENERATE")], {
+            description:
+              "Keep the source soundtrack or generate new audio. Defaults to KEEP_ORIGINAL.",
+          }),
+        ),
+        remixActions: Type.Optional(remixActionsSchema),
+        ...pollControlProperties,
+      }),
+      execute: async (params, config, context) => {
+        const { wait, pollIntervalMs, timeoutMs, ...rest } = params;
+        const client = getVideoGenClient(config);
+
+        return runComposite({
+          start: () => client.workflows.videoToVideo(sdkRequest(rest)),
+          poll: (workflowRunId) => client.workflows.getWorkflowRun({ workflowRunId }),
+          idKey: "workflowRunId",
+          controls: extractControls({ wait, pollIntervalMs, timeoutMs }),
+          signal: context.signal,
+        });
+      },
+    }),
+
+    tool({
       name: "list_workflow_runs",
       label: "List workflow runs",
       description: "List workflow runs, most recent first.",

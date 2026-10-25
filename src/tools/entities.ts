@@ -6,12 +6,20 @@ import type { DefinedTool, ToolFactory } from "../toolTypes";
 import { getVideoGenClient } from "../videoGenClient";
 
 const entityIdField = Type.String({ description: "Entity id (vg_enti_...)." });
+const entityBrandConfigField = Type.Object({
+  fonts: Type.String({ description: "Font guidance." }),
+  colors: Type.String({ description: "Color guidance, including hex codes when available." }),
+  writingStyle: Type.String({ description: "Voice and tone for copy." }),
+});
 const entityTypeField = Type.Union(
   [
     Type.Literal("ACTOR"),
     Type.Literal("PRODUCT"),
     Type.Literal("VISUAL_STYLE"),
     Type.Literal("SLIDESHOW_THEME"),
+    Type.Literal("BRAND"),
+    Type.Literal("LOCATION"),
+    Type.Literal("PROP"),
   ],
   { description: "Entity type." },
 );
@@ -22,7 +30,7 @@ export function buildEntityTools(tool: ToolFactory): DefinedTool[] {
       name: "list_entities",
       label: "List entities",
       description:
-        "List ACTOR, PRODUCT, VISUAL_STYLE, and SLIDESHOW_THEME entities on the team. Filter with entityType when you only need one kind.",
+        "List ACTOR, PRODUCT, VISUAL_STYLE, SLIDESHOW_THEME, BRAND, LOCATION, and PROP entities on the team. Filter with entityType when you only need one kind.",
       parameters: Type.Object({
         entityType: Type.Optional(entityTypeField),
         cursor: cursorField,
@@ -39,11 +47,12 @@ export function buildEntityTools(tool: ToolFactory): DefinedTool[] {
       name: "create_entity",
       label: "Create entity",
       description:
-        "Create an ACTOR (character), PRODUCT (product/object), VISUAL_STYLE, or SLIDESHOW_THEME entity. After create, attach at least one image with add_entity_reference (upload the image first).",
+        "Create an ACTOR (character), PRODUCT (something the user sells or promotes), VISUAL_STYLE, SLIDESHOW_THEME, BRAND, LOCATION (place or set), or PROP (background object that is not for sale) entity. Anything the user sells is a PRODUCT, never a PROP. A BRAND accepts brandConfig with fonts, colors, and writingStyle. After create, attach reference images with add_entity_reference (upload the image first).",
       parameters: Type.Object({
         entityType: entityTypeField,
         name: Type.String({ minLength: 1, description: "Display name for the entity." }),
         description: Type.Optional(Type.String({ description: "Optional longer description." })),
+        brandConfig: Type.Optional(entityBrandConfigField),
       }),
       execute: async (params, config) => {
         const client = getVideoGenClient(config);
@@ -67,7 +76,7 @@ export function buildEntityTools(tool: ToolFactory): DefinedTool[] {
     tool({
       name: "update_entity",
       label: "Update entity",
-      description: "Update an entity's display name and/or description.",
+      description: "Update an entity's display name, description, or complete brandConfig.",
       parameters: Type.Object({
         entityId: entityIdField,
         name: Type.Optional(
@@ -76,6 +85,7 @@ export function buildEntityTools(tool: ToolFactory): DefinedTool[] {
         description: Type.Optional(
           Type.String({ description: "New description. Omit to leave unchanged." }),
         ),
+        brandConfig: Type.Optional(entityBrandConfigField),
       }),
       execute: async (params, config) => {
         const client = getVideoGenClient(config);
@@ -100,7 +110,7 @@ export function buildEntityTools(tool: ToolFactory): DefinedTool[] {
       name: "add_entity_reference",
       label: "Add entity reference",
       description:
-        "Attach an uploaded image file (vg_file_...) as a reference on an entity. For new PRODUCT or ACTOR entities, set isDefault to true.",
+        "Attach an uploaded image file (vg_file_...) as a reference on an entity. For a BRAND, set role BRAND_LOGO for its overlay logo or BRAND_STYLE_GUIDE for its visual generation reference. For new PRODUCT or ACTOR entities, set isDefault to true.",
       parameters: Type.Object({
         entityId: entityIdField,
         fileId: Type.String({
@@ -108,6 +118,19 @@ export function buildEntityTools(tool: ToolFactory): DefinedTool[] {
         }),
         description: Type.Optional(
           Type.String({ description: "Optional description of this reference image." }),
+        ),
+        role: Type.Optional(
+          Type.Union(
+            [
+              Type.Literal("REFERENCE"),
+              Type.Literal("BRAND_LOGO"),
+              Type.Literal("BRAND_STYLE_GUIDE"),
+            ],
+            {
+              description:
+                "What the file is used for. Defaults to REFERENCE. BRAND_LOGO and BRAND_STYLE_GUIDE are only for BRAND entities.",
+            },
+          ),
         ),
         isDefault: Type.Optional(
           Type.Boolean({

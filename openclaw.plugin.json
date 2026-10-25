@@ -1,8 +1,8 @@
 {
   "id": "videogen",
-  "name": "VideoGen",
+  "name": "VideoGen - AI Video Generator",
   "description": "Generate videos and media with VideoGen. Exposes the full VideoGen API (workflows, image/video/audio generation, media editing, projects, files) as native OpenClaw tools.",
-  "version": "2.2.1",
+  "version": "2.5.3",
   "configSchema": {
     "type": "object",
     "properties": {
@@ -26,6 +26,7 @@
       "slideshow_to_video",
       "storyboard_to_video",
       "prompt_to_video_clip",
+      "video_to_video",
       "list_workflow_runs",
       "get_workflow_run",
       "cancel_workflow_run",

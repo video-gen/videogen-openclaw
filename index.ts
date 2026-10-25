@@ -13,7 +13,7 @@ import { buildWorkflowTools } from "./src/tools/workflows";
 
 export default defineToolPlugin({
   id: "videogen",
-  name: "VideoGen",
+  name: "VideoGen - AI Video Generator",
   description:
     "Generate videos and media with VideoGen. Exposes the full VideoGen API (workflows, image/video/audio generation, media editing, projects, files) as native OpenClaw tools.",
   activation: { onStartup: true },

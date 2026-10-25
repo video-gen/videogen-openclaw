@@ -23,7 +23,7 @@ const GUIDANCE_DOCUMENTS = [
     label: "Workflows guidance",
     description: "How to choose and run workflows, then remix and export the resulting project.",
     markdown:
-      "# Workflows\n\nChoose `script_to_video` for narrated scripts, `voiceover_to_video` for uploaded narration, `slideshow_to_video` for a PDF or deck, `storyboard_to_video` for explicit scenes, and `prompt_to_video_clip` for one short clip in an editable project. The canonical flow is run, remix, then export. Poll each asynchronous step to completion.",
+      "# Workflows\n\nChoose `script_to_video` for narrated scripts, `voiceover_to_video` for uploaded narration, `slideshow_to_video` for a PDF or deck, `storyboard_to_video` for explicit scenes, `prompt_to_video_clip` for one short clip in an editable project, and `video_to_video` to restyle an existing video (pass `videoFileId` or a public `videoUrl`). The canonical flow is run, remix, then export. Poll each asynchronous step to completion.",
   },
   {
     name: "get_tools_vs_workflows_guidance",

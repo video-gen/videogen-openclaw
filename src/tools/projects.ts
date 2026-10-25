@@ -19,17 +19,11 @@ export function buildProjectTools(tool: ToolFactory): DefinedTool[] {
       name: "list_projects",
       label: "List projects",
       description:
-        "List projects. API-created projects only by default; pass includeUiProjects to also include dashboard projects.",
+        "List projects, including projects created in the dashboard.",
       parameters: Type.Object({
         cursor: cursorField,
         limit: limitField,
         selfOnly: selfOnlyField,
-        includeUiProjects: Type.Optional(
-          Type.Boolean({
-            description:
-              "Include projects created in the VideoGen dashboard, not just API-created ones.",
-          }),
-        ),
       }),
       execute: async (params, config) => {
         const client = getVideoGenClient(config);

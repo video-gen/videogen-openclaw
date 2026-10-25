@@ -8,7 +8,7 @@ It wraps the official [`@videogen/sdk`](https://www.npmjs.com/package/@videogen/
 
 The plugin registers the full VideoGen tool surface:
 
-- **Workflows:** `script_to_video`, `voiceover_to_video`, `slideshow_to_video`, `storyboard_to_video`, `prompt_to_video_clip`, plus `list_workflow_runs`, `get_workflow_run`, `cancel_workflow_run`.
+- **Workflows:** `script_to_video`, `voiceover_to_video`, `slideshow_to_video`, `storyboard_to_video`, `prompt_to_video_clip`, `video_to_video`, plus `list_workflow_runs`, `get_workflow_run`, `cancel_workflow_run`.
 - **Media generation & editing:** `generate_image`, `generate_video_clip`, `text_to_speech`, `generate_sound_effect`, `generate_music`, `generate_motion_graphic`, `generate_avatar`, `vectorize_image`, `remove_image_background`, `remove_video_background`, `upscale_image`, `upscale_video`, `image_3d_effect`, plus `list_tool_executions`, `get_tool_execution`, `cancel_tool_execution`.
 - **Projects:** `list_projects`, `get_project`, `export_project`, `get_project_export`, `remix_project`, `list_project_remix_actions`.
 - **Files:** `upload_file`, `create_file_upload`, `get_file`, `list_files`.
