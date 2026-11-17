@@ -70,7 +70,9 @@ export function buildFileTools(tool: ToolFactory): DefinedTool[] {
             ? params.displayName
             : basename(params.filePath);
 
-        return uploadFile(client, bytes, {
+        return uploadFile({
+          client,
+          data: bytes,
           displayName,
           ...(params.type != null ? { type: params.type } : {}),
         });
@@ -152,7 +154,11 @@ export function buildFileTools(tool: ToolFactory): DefinedTool[] {
           });
         }
 
-        return getHydratedFile(client, params.fileId);
+        return getHydratedFile({
+          client,
+          fileId: params.fileId,
+          ...(context.signal == null ? {} : { signal: context.signal }),
+        });
       },
     }),
 

@@ -21,9 +21,9 @@ const GUIDANCE_DOCUMENTS = [
   {
     name: "get_workflows_guidance",
     label: "Workflows guidance",
-    description: "How to choose and run workflows, then remix and export the resulting project.",
+    description: "How to choose and run workflows, then edit and export the resulting project.",
     markdown:
-      "# Workflows\n\nChoose `script_to_video` for narrated scripts, `voiceover_to_video` for uploaded narration, `slideshow_to_video` for a PDF or deck, `storyboard_to_video` for explicit scenes, `prompt_to_video_clip` for one short clip in an editable project, and `video_to_video` to restyle an existing video (pass `videoFileId` or a public `videoUrl`). The canonical flow is run, remix, then export. Poll each asynchronous step to completion.",
+      "# Workflows\n\nChoose `script_to_video` for narrated scripts, `voiceover_to_video` for uploaded narration, `slideshow_to_video` for a PDF or deck, `storyboard_to_video` for explicit scenes, `prompt_to_video_clip` for one short clip in an editable project, and `video_to_video` to restyle an existing video (pass `videoFileId` or a public `videoUrl`), and `translate_video` to translate a video's speech into one or more languages (one editable video per language; pass the language's `editableVideoId` to `export_project`). The canonical flow is run, edit, then export. Poll each asynchronous step to completion.",
   },
   {
     name: "get_tools_vs_workflows_guidance",
@@ -41,7 +41,7 @@ export function buildGuidanceTools(tool: ToolFactory): DefinedTool[] {
       label: guidance.label,
       description: guidance.description,
       parameters: Type.Object({}),
-      execute: async () => ({ markdown: guidance.markdown }),
+      execute: () => Promise.resolve({ markdown: guidance.markdown }),
     }),
   );
 }

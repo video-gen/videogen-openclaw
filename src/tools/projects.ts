@@ -5,7 +5,7 @@ import {
   cursorField,
   limitField,
   pollControlProperties,
-  remixActionsSchema,
+  videoEditsSchema,
   selfOnlyField,
 } from "../schemas";
 import type { DefinedTool, ToolFactory } from "../toolTypes";
@@ -18,8 +18,7 @@ export function buildProjectTools(tool: ToolFactory): DefinedTool[] {
     tool({
       name: "list_projects",
       label: "List projects",
-      description:
-        "List projects, including projects created in the dashboard.",
+      description: "List projects, including projects created in the dashboard.",
       parameters: Type.Object({
         cursor: cursorField,
         limit: limitField,
@@ -28,7 +27,7 @@ export function buildProjectTools(tool: ToolFactory): DefinedTool[] {
       execute: async (params, config) => {
         const client = getVideoGenClient(config);
 
-        return client.projects.listProjects(sdkRequest(params));
+        return await client.projects.listProjects(sdkRequest(params));
       },
     }),
 
@@ -40,7 +39,7 @@ export function buildProjectTools(tool: ToolFactory): DefinedTool[] {
       execute: async (params, config) => {
         const client = getVideoGenClient(config);
 
-        return client.projects.getProject({ projectId: params.projectId });
+        return await client.projects.getProject({ projectId: params.projectId });
       },
     }),
 
@@ -62,13 +61,19 @@ export function buildProjectTools(tool: ToolFactory): DefinedTool[] {
             { description: "Export quality tier." },
           ),
         ),
+        editableVideoId: Type.Optional(
+          Type.String({
+            description:
+              "Editable video to export (vg_vide_...), from a workflow run's outputs. Defaults to the project's first video.",
+          }),
+        ),
         ...pollControlProperties,
       }),
       execute: async (params, config, context) => {
         const { projectId, wait, pollIntervalMs, timeoutMs, ...rest } = params;
         const client = getVideoGenClient(config);
 
-        return runComposite({
+        return await runComposite({
           start: () => client.projects.exportProject(sdkRequest({ projectId, ...rest })),
           poll: (exportId) => client.projects.getProjectExport({ projectId, exportId }),
           idKey: "exportId",
@@ -90,7 +95,7 @@ export function buildProjectTools(tool: ToolFactory): DefinedTool[] {
       execute: async (params, config) => {
         const client = getVideoGenClient(config);
 
-        return client.projects.getProjectExport({
+        return await client.projects.getProjectExport({
           projectId: params.projectId,
           exportId: params.exportId,
         });
@@ -98,36 +103,47 @@ export function buildProjectTools(tool: ToolFactory): DefinedTool[] {
     }),
 
     tool({
-      name: "remix_project",
-      label: "Remix project",
+      name: "start_video_edits",
+      label: "Start video edits",
       description:
-        "Apply remix actions (music, logo, captions, transitions, natural-language edits) to an existing project. Poll with list_project_remix_actions for status.",
+        "Apply video edits (music, logo, captions, transitions) to an existing project. Poll with list_video_edits for status.",
       parameters: Type.Object({
-        projectId: Type.String({ description: "Project id to remix." }),
-        remixActions: remixActionsSchema,
+        projectId: Type.String({ description: "Project id that owns the video." }),
+        videoEdits: videoEditsSchema,
         saveAsNewProject: Type.Optional(
           Type.Boolean({
             description:
-              "When true, save the remixed result as a new project instead of editing in place.",
+              "When true, copy the project and edit the corresponding video in the copy.",
           }),
+        ),
+        editableVideoId: Type.String({
+          description:
+            "Editable video to edit (vg_vide_...), from project artifacts or a workflow run's outputs.",
+        }),
+      }),
+      execute: async (params, config) => {
+        const client = getVideoGenClient(config);
+
+        return await client.projects.startVideoEdits(sdkRequest(params));
+      },
+    }),
+
+    tool({
+      name: "list_video_edits",
+      label: "List project video edits",
+      description: "List the status of video edits applied to a project.",
+      parameters: Type.Object({
+        projectId: projectIdField,
+        cursor: cursorField,
+        limit: limitField,
+        editableVideoId: Type.Optional(
+          Type.String({ description: "Filter by editable video id." }),
         ),
       }),
       execute: async (params, config) => {
         const client = getVideoGenClient(config);
 
-        return client.projects.remixProject(sdkRequest(params));
-      },
-    }),
-
-    tool({
-      name: "list_project_remix_actions",
-      label: "List project remix actions",
-      description: "List the status of remix actions applied to a project.",
-      parameters: Type.Object({ projectId: projectIdField }),
-      execute: async (params, config) => {
-        const client = getVideoGenClient(config);
-
-        return client.projects.listProjectRemixActions({ projectId: params.projectId });
+        return await client.projects.listVideoEdits(sdkRequest(params));
       },
     }),
   ];

@@ -1,7 +1,7 @@
 import { Type, type TSchema } from "typebox";
 
 /**
- * Loose object/array schemas for large SDK request unions (remix actions,
+ * Loose object/array schemas for large SDK request unions (video edits,
  * caption styles, storyboard scenes, pronunciation replacements) we do not
  * re-model field by field. They advertise a permissive JSON Schema for the wire
  * format; the VideoGen API validates the real shape. Mirrors the VideoGen MCP
@@ -114,8 +114,8 @@ export const watermarkModeSchema = Type.Union(
   { description: "Whether to apply a VideoGen watermark to the output." },
 );
 
-export const remixActionsSchema = looseObjectArray(
-  "Edits applied to the project, each an object with a `type`: SET_BACKGROUND_MUSIC, SET_LOGO, ENABLE_CAPTIONS, DISABLE_CAPTIONS, ADD_TRANSITIONS, ADD_ZOOM, RESIZE_PROJECT, CLEAN_UP_TRANSCRIPT, CONVERT_IMAGES_TO_VIDEOS, or CHANGE_NARRATOR (plus that action's own fields). CHANGE_NARRATOR accepts actorEntityId and optional avatarQuality. Provide at least two for a polished result, e.g. [{ type: 'ENABLE_CAPTIONS' }, { type: 'SET_BACKGROUND_MUSIC' }].",
+export const videoEditsSchema = looseObjectArray(
+  "Ordered video edit objects, each with a type and its operation fields: SET_BACKGROUND_MUSIC, SET_LOGO, ENABLE_CAPTIONS, DISABLE_CAPTIONS, ADD_TRANSITIONS, ADD_ZOOM, RESIZE_PROJECT, CLEAN_UP_TRANSCRIPT, CONVERT_IMAGES_TO_VIDEOS, REGENERATE_IMAGES, UPSCALE_ASSETS, CHANGE_NARRATOR, SHUFFLE_STOCK_VISUALS, GENERATE_MUSIC, or TRANSLATE_PROJECT. For captions and motion, use [{ type: 'ENABLE_CAPTIONS' }, { type: 'ADD_ZOOM' }].",
 );
 
 export const captionStyleSchema = Type.Union([looseObject(), Type.Null()], {
@@ -135,8 +135,7 @@ export const isOutputTemporaryField = Type.Optional(
 
 export const startFrameFileIdField = Type.Optional(
   Type.String({
-    description:
-      "Opening-frame still file id (vg_file_...). Used as the first frame of the clip.",
+    description: "Opening-frame still file id (vg_file_...). Used as the first frame of the clip.",
   }),
 );
 

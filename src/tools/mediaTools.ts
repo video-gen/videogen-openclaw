@@ -22,14 +22,14 @@ import {
 } from "../schemas";
 import type { DefinedTool, ToolFactory } from "../toolTypes";
 import { getVideoGenClient } from "../videoGenClient";
-import type { VideoGenClient } from "@videogen/sdk";
+import type { VideoGen } from "@videogen/sdk";
 
 const imageFileIdField = Type.String({ description: "Source image file id (vg_file_...)." });
 const videoFileIdField = Type.String({ description: "Source video file id (vg_file_...)." });
 
 /** Runs a media tool's start call and polls its tool execution to a terminal state. */
 function runToolComposite(args: {
-  client: VideoGenClient;
+  client: VideoGen;
   start: () => Promise<unknown>;
   controls: PollControls;
   signal?: AbortSignal | undefined;
@@ -152,7 +152,9 @@ export function buildMediaTools(tool: ToolFactory): DefinedTool[] {
         autoExpandPronunciationReplacements: Type.Optional(
           Type.Boolean({ description: "Whether to auto-expand pronunciation replacements." }),
         ),
-        voiceSpeed: Type.Optional(Type.Number({ minimum: 0, description: "Speech rate multiplier." })),
+        voiceSpeed: Type.Optional(
+          Type.Number({ minimum: 0, description: "Speech rate multiplier." }),
+        ),
         numResults: numResultsField,
         isOutputTemporary: isOutputTemporaryField,
         ...pollControlProperties,
@@ -422,6 +424,37 @@ export function buildMediaTools(tool: ToolFactory): DefinedTool[] {
     }),
 
     tool({
+      name: "dub_video",
+      label: "Dub video",
+      description:
+        "Create a copy of a video with its speech translated into another language, keeping the original voices and timing.",
+      parameters: Type.Object({
+        videoFileId: videoFileIdField,
+        targetLanguage: Type.String({
+          description: "Language to translate the speech into, such as es or fr.",
+        }),
+        sourceLanguage: Type.Optional(
+          Type.String({
+            description: "Language spoken in the video. Omit to detect it automatically.",
+          }),
+        ),
+        isOutputTemporary: isOutputTemporaryField,
+        ...pollControlProperties,
+      }),
+      execute: async (params, config, context) => {
+        const { wait, pollIntervalMs, timeoutMs, ...rest } = params;
+        const client = getVideoGenClient(config);
+
+        return runToolComposite({
+          client,
+          start: () => client.tools.dubVideo(sdkRequest(rest)),
+          controls: extractControls({ wait, pollIntervalMs, timeoutMs }),
+          signal: context.signal,
+        });
+      },
+    }),
+
+    tool({
       name: "image_3d_effect",
       label: "Image 3D effect",
       description: "Add 3D parallax motion to a still image, producing a video.",
@@ -438,7 +471,7 @@ export function buildMediaTools(tool: ToolFactory): DefinedTool[] {
 
         return runToolComposite({
           client,
-          start: () => client.tools.image3DEffect(sdkRequest(rest)),
+          start: () => client.tools.image3dEffect(sdkRequest(rest)),
           controls: extractControls({ wait, pollIntervalMs, timeoutMs }),
           signal: context.signal,
         });

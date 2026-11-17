@@ -12,7 +12,7 @@ import {
   limitField,
   logoFileIdField,
   pollControlProperties,
-  remixActionsSchema,
+  videoEditsSchema,
   selfOnlyField,
   visualPacingSchema,
   visualStyleSchema,
@@ -29,7 +29,7 @@ export function buildWorkflowTools(tool: ToolFactory): DefinedTool[] {
       name: "script_to_video",
       label: "Script to video",
       description:
-        "Turn a script into a finished narrated video with visuals and captions. The script is narrated verbatim (not rewritten). Starts the workflow and, by default, waits for the finished render. Provide at least two remixActions (e.g. ENABLE_CAPTIONS + SET_BACKGROUND_MUSIC) for a polished result.",
+        "Turn a script into a finished narrated video with visuals and captions. The script is narrated verbatim (not rewritten). Starts the workflow and, by default, waits for the finished render. Provide at least two videoEdits (e.g. ENABLE_CAPTIONS + SET_BACKGROUND_MUSIC) for a polished result.",
       parameters: Type.Object({
         script: Type.String({
           description: "The narration script. Narrated verbatim; not rewritten.",
@@ -49,14 +49,14 @@ export function buildWorkflowTools(tool: ToolFactory): DefinedTool[] {
           }),
         ),
         workflowAgentContext: workflowAgentContextField,
-        remixActions: Type.Optional(remixActionsSchema),
+        videoEdits: Type.Optional(videoEditsSchema),
         ...pollControlProperties,
       }),
       execute: async (params, config, context) => {
         const { wait, pollIntervalMs, timeoutMs, ...rest } = params;
         const client = getVideoGenClient(config);
 
-        return runComposite({
+        return await runComposite({
           start: () => client.workflows.scriptToVideo(sdkRequest(rest)),
           poll: (workflowRunId) => client.workflows.getWorkflowRun({ workflowRunId }),
           idKey: "workflowRunId",
@@ -81,14 +81,14 @@ export function buildWorkflowTools(tool: ToolFactory): DefinedTool[] {
         captionStyle: Type.Optional(captionStyleSchema),
         logoFileId: logoFileIdField,
         workflowAgentContext: workflowAgentContextField,
-        remixActions: Type.Optional(remixActionsSchema),
+        videoEdits: Type.Optional(videoEditsSchema),
         ...pollControlProperties,
       }),
       execute: async (params, config, context) => {
         const { wait, pollIntervalMs, timeoutMs, ...rest } = params;
         const client = getVideoGenClient(config);
 
-        return runComposite({
+        return await runComposite({
           start: () => client.workflows.voiceoverToVideo(sdkRequest(rest)),
           poll: (workflowRunId) => client.workflows.getWorkflowRun({ workflowRunId }),
           idKey: "workflowRunId",
@@ -102,7 +102,7 @@ export function buildWorkflowTools(tool: ToolFactory): DefinedTool[] {
       name: "slideshow_to_video",
       label: "Slideshow to video",
       description:
-        "Build a narrated video from an already-uploaded PDF or slideshow file. Upload the file first with upload_file, then pass its fileId. Starts the workflow and, by default, waits for the finished render. ADD_TRANSITIONS + CONVERT_IMAGES_TO_VIDEOS make strong remixActions here.",
+        "Build a narrated video from an already-uploaded PDF or slideshow file. Upload the file first with upload_file, then pass its fileId. Starts the workflow and, by default, waits for the finished render. ADD_TRANSITIONS + CONVERT_IMAGES_TO_VIDEOS make strong videoEdits here.",
       parameters: Type.Object({
         fileId: Type.String({ description: "Uploaded PDF/slideshow file id (vg_file_...)." }),
         slideScripts: Type.Optional(
@@ -124,14 +124,14 @@ export function buildWorkflowTools(tool: ToolFactory): DefinedTool[] {
         ),
         captionStyle: Type.Optional(captionStyleSchema),
         logoFileId: logoFileIdField,
-        remixActions: Type.Optional(remixActionsSchema),
+        videoEdits: Type.Optional(videoEditsSchema),
         ...pollControlProperties,
       }),
       execute: async (params, config, context) => {
         const { wait, pollIntervalMs, timeoutMs, ...rest } = params;
         const client = getVideoGenClient(config);
 
-        return runComposite({
+        return await runComposite({
           start: () => client.workflows.slideshowToVideo(sdkRequest(rest)),
           poll: (workflowRunId) => client.workflows.getWorkflowRun({ workflowRunId }),
           idKey: "workflowRunId",
@@ -145,7 +145,7 @@ export function buildWorkflowTools(tool: ToolFactory): DefinedTool[] {
       name: "storyboard_to_video",
       label: "Storyboard to video",
       description:
-        "Build a video from a structured storyboard of scenes. Starts the workflow and, by default, waits for the finished render. This workflow does not accept remixActions.",
+        "Build a video from a structured storyboard of scenes. Starts the workflow and, by default, waits for the finished render. This workflow accepts ordered videoEdits after generation.",
       parameters: Type.Object({
         scenes: Type.Array(Type.Record(Type.String(), Type.Unknown()), {
           description:
@@ -173,7 +173,7 @@ export function buildWorkflowTools(tool: ToolFactory): DefinedTool[] {
         const { wait, pollIntervalMs, timeoutMs, ...rest } = params;
         const client = getVideoGenClient(config);
 
-        return runComposite({
+        return await runComposite({
           start: () => client.workflows.storyboardToVideo(sdkRequest(rest)),
           poll: (workflowRunId) => client.workflows.getWorkflowRun({ workflowRunId }),
           idKey: "workflowRunId",
@@ -187,7 +187,7 @@ export function buildWorkflowTools(tool: ToolFactory): DefinedTool[] {
       name: "prompt_to_video_clip",
       label: "Prompt to video",
       description:
-        "Generate one short AI video clip (1-30 seconds) from a text prompt inside an editable project. VideoGen generates an opening frame (optionally guided by reference images), then animates it into a video. Starts the workflow and, by default, waits for the finished render. Does not accept remixActions. For a standalone clip without a project, use generate_video_clip. For longer narrated multi-scene videos, use script_to_video.",
+        "Generate one short AI video clip (1-30 seconds) from a text prompt inside an editable project. VideoGen generates an opening frame (optionally guided by reference images), then animates it into a video. Starts the workflow and, by default, waits for the finished render. Does not accept videoEdits. For a standalone clip without a project, use generate_video_clip. For longer narrated multi-scene videos, use script_to_video.",
       parameters: Type.Object({
         prompt: Type.String({
           description:
@@ -227,7 +227,7 @@ export function buildWorkflowTools(tool: ToolFactory): DefinedTool[] {
         const { wait, pollIntervalMs, timeoutMs, ...rest } = params;
         const client = getVideoGenClient(config);
 
-        return runComposite({
+        return await runComposite({
           start: () => client.workflows.promptToVideoClip(sdkRequest(rest)),
           poll: (workflowRunId) => client.workflows.getWorkflowRun({ workflowRunId }),
           idKey: "workflowRunId",
@@ -241,7 +241,7 @@ export function buildWorkflowTools(tool: ToolFactory): DefinedTool[] {
       name: "video_to_video",
       label: "Video to video",
       description:
-        "Restyle an existing video from a text prompt inside an editable project, keeping its length and timing. Pass exactly one of videoFileId (an uploaded video) or videoUrl (a public link, which the run imports itself). Up to 120 seconds is restyled per run. Starts the workflow and, by default, waits for the finished render. Provide at least two remixActions (e.g. ENABLE_CAPTIONS + ADD_TRANSITIONS) for a polished result.",
+        "Restyle an existing video from a text prompt inside an editable project, keeping its length and timing. Pass exactly one of videoFileId (an uploaded video) or videoUrl (a public link, which the run imports itself). Up to 120 seconds is restyled per run. Starts the workflow and, by default, waits for the finished render. Provide at least two videoEdits (e.g. ENABLE_CAPTIONS + ADD_TRANSITIONS) for a polished result.",
       parameters: Type.Object({
         videoFileId: Type.Optional(
           Type.String({
@@ -300,15 +300,52 @@ export function buildWorkflowTools(tool: ToolFactory): DefinedTool[] {
               "Keep the source soundtrack or generate new audio. Defaults to KEEP_ORIGINAL.",
           }),
         ),
-        remixActions: Type.Optional(remixActionsSchema),
+        videoEdits: Type.Optional(videoEditsSchema),
         ...pollControlProperties,
       }),
       execute: async (params, config, context) => {
         const { wait, pollIntervalMs, timeoutMs, ...rest } = params;
         const client = getVideoGenClient(config);
 
-        return runComposite({
+        return await runComposite({
           start: () => client.workflows.videoToVideo(sdkRequest(rest)),
+          poll: (workflowRunId) => client.workflows.getWorkflowRun({ workflowRunId }),
+          idKey: "workflowRunId",
+          controls: extractControls({ wait, pollIntervalMs, timeoutMs }),
+          signal: context.signal,
+        });
+      },
+    }),
+
+    tool({
+      name: "translate_video",
+      label: "Translate video",
+      description:
+        "Translate the speech of an uploaded video (videoFileId) into each of outputLanguages, keeping the original voices and timing. Each language becomes its own editable video in one project; the finished run's outputs list each language's editableVideoId, and autoExport renders the first successful language. Provide at least two videoEdits (e.g. ENABLE_CAPTIONS + GENERATE_MUSIC) for a polished result. Starts the workflow and, by default, waits for the run to finish.",
+      parameters: Type.Object({
+        videoFileId: Type.String({
+          description: "Uploaded video file id (vg_file_...) whose speech should be translated.",
+        }),
+        outputLanguages: Type.Array(Type.String(), {
+          minItems: 1,
+          maxItems: 10,
+          description:
+            "Languages to translate into, such as es or fr. Each becomes its own editable video.",
+        }),
+        sourceLanguage: Type.Optional(
+          Type.String({
+            description: "Language spoken in the video. Omit to detect it automatically.",
+          }),
+        ),
+        videoEdits: Type.Optional(videoEditsSchema),
+        ...pollControlProperties,
+      }),
+      execute: async (params, config, context) => {
+        const { wait, pollIntervalMs, timeoutMs, ...rest } = params;
+        const client = getVideoGenClient(config);
+
+        return await runComposite({
+          start: () => client.workflows.translateVideo(sdkRequest(rest)),
           poll: (workflowRunId) => client.workflows.getWorkflowRun({ workflowRunId }),
           idKey: "workflowRunId",
           controls: extractControls({ wait, pollIntervalMs, timeoutMs }),
@@ -329,7 +366,7 @@ export function buildWorkflowTools(tool: ToolFactory): DefinedTool[] {
       execute: async (params, config) => {
         const client = getVideoGenClient(config);
 
-        return client.workflows.listWorkflowRuns(sdkRequest(params));
+        return await client.workflows.listWorkflowRuns(sdkRequest(params));
       },
     }),
 
@@ -343,7 +380,7 @@ export function buildWorkflowTools(tool: ToolFactory): DefinedTool[] {
       execute: async (params, config) => {
         const client = getVideoGenClient(config);
 
-        return client.workflows.getWorkflowRun({ workflowRunId: params.workflowRunId });
+        return await client.workflows.getWorkflowRun({ workflowRunId: params.workflowRunId });
       },
     }),
 
@@ -357,7 +394,7 @@ export function buildWorkflowTools(tool: ToolFactory): DefinedTool[] {
       execute: async (params, config) => {
         const client = getVideoGenClient(config);
 
-        return client.workflows.cancelWorkflowRun({ workflowRunId: params.workflowRunId });
+        return await client.workflows.cancelWorkflowRun({ workflowRunId: params.workflowRunId });
       },
     }),
   ];

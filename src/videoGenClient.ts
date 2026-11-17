@@ -1,4 +1,4 @@
-import { VideoGenClient } from "@videogen/sdk";
+import { VideoGen, VideoGenError } from "@videogen/sdk";
 
 const DEFAULT_VIDEOGEN_BASE_URL = "https://api.videogen.io";
 
@@ -51,20 +51,24 @@ export function resolveBaseUrl(config: VideoGenPluginConfig): string {
   return DEFAULT_VIDEOGEN_BASE_URL;
 }
 
-const clientCache = new Map<string, VideoGenClient>();
+const clientCache = new Map<string, VideoGen>();
 
 /**
- * Returns a `VideoGenClient` for the resolved credentials, memoized by
+ * Returns a `VideoGen` for the resolved credentials, memoized by
  * key + base URL so repeated tool calls in a session reuse one client. Throws a
  * setup error (surfaced to the model) when no API key is configured.
  */
-export function getVideoGenClient(config: VideoGenPluginConfig): VideoGenClient {
+export function getVideoGenClient(config: VideoGenPluginConfig): VideoGen {
   const apiKey = resolveApiKey(config);
 
   if (apiKey == null) {
-    throw new Error(
-      "VideoGen API key is not configured. Set the VIDEOGEN_API_KEY environment variable (or the plugin's apiKey config). Create a key at https://app.videogen.io/api.",
-    );
+    throw new VideoGenError({
+      message:
+        "VideoGen API key is not configured. Set the VIDEOGEN_API_KEY environment variable (or the plugin's apiKey config). Create a key at https://app.videogen.io/api.",
+      status: 401,
+      body: null,
+      requestId: null,
+    });
   }
 
   const baseUrl = resolveBaseUrl(config);
@@ -76,7 +80,7 @@ export function getVideoGenClient(config: VideoGenPluginConfig): VideoGenClient 
     return cached;
   }
 
-  const client = new VideoGenClient({ token: apiKey, baseUrl, clientId: "openclaw" });
+  const client = new VideoGen({ apiKey, baseUrl, clientId: "openclaw" });
   clientCache.set(cacheKey, client);
 
   return client;
